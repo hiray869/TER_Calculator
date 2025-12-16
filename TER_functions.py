@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # -- DBW functions --- 
 
 # infants
@@ -184,7 +183,6 @@ def TER_adults_Oxford(age, weight, sex, PAL):
     return TER, BMR, PAL_factor, a, b
 
 
-=======
 # -- DBW functions --- 
 
 # infants
@@ -370,4 +368,4 @@ def TER_adults_Oxford(age, weight, sex, PAL):
     return TER, BMR, PAL_factor, a, b
 
 
->>>>>>> 1d0e97a37c09b3f9ef9b4cc8cfedf9e17db4ed63
+
