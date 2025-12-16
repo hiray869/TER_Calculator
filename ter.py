@@ -39,17 +39,19 @@ else:
     sex = st.selectbox('Sex', ['Male', 'Female'])
     PAL = st.selectbox('Physical Activity', ['Bed rest', 'Sedentary', 'Light', 'Moderate', 'Heavy', 'Very active/Vigorous'])
 
-    is_given_DBW = st.radio('Is DBW given? ', ['Yes', 'No'])
+    if age >= 18:
 
-    if is_given_DBW == 'No':
+        is_given_DBW = st.radio('Is DBW given? ', ['Yes', 'No'])
 
-        DBW_method = st.radio('Select DBW calculation method', ['BMI-Based Formulation', 'Tannhauser\'s Method', 'N/A'])
-        st.warning('Select \'N/A\' if DBW is not required for the calculations.')
-        
-# check if DBW is given
-    else:
-        
-        given_DBW = st.number_input('DBW (kg)')
+        if is_given_DBW == 'No':
+
+            DBW_method = st.radio('Select DBW calculation method', ['BMI-Based Formulation', 'Tannhauser\'s Method', 'N/A'])
+            st.warning('Select \'N/A\' if DBW is not required for the calculations.')
+            
+    
+        else: # check if DBW is given
+            
+            given_DBW = st.number_input('DBW (kg)')
         
 # -- caluclation of ter --- 
 if st.button("Calculate TER"):
