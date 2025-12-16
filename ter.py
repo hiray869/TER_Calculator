@@ -188,7 +188,7 @@ if st.button("Calculate TER"):
                 st.subheader('Using CBMRG formula')
                 st.write(f'TER = {given_DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
 
-                st.write(f'\nUsing PDRI method, TER = {TER_children_adolescents_PDRI} kcal.')
+                st.subheader('Using PDRI method')
                 st.write(f'TER = {given_DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
 
         else: # children 
