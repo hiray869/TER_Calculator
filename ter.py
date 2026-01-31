@@ -39,15 +39,11 @@ else:
     sex = st.selectbox('Sex', ['Male', 'Female'])
     PAL = st.selectbox('Physical Activity', ['Bed rest', 'Sedentary', 'Light', 'Moderate', 'Heavy', 'Very active/Vigorous'])
 
-    is_given_DBW = st.radio('Is DBW given? ', ['Yes', 'No'])
+    st.write('Select method for DBW calculation.')
+    DBW_method = DBW_method = st.radio('Select DBW calculation method', ['BMI-Based Formulation', 'Tannhauser\'s Method', 'Input a value'])
 
-    if is_given_DBW == 'No':
+    if DBW_method == 'Input a value':
 
-        DBW_method = st.radio('Select DBW calculation method', ['BMI-Based Formulation', 'Tannhauser\'s Method', 'N/A'])
-        st.warning('Select \'N/A\' if DBW is not required for the calculations.')
-
-    else: # check if DBW is given
-        
         given_DBW = st.number_input('DBW (kg)')
         
 # -- caluclation of ter --- 
@@ -87,66 +83,53 @@ if st.button("Calculate TER"):
 
     else: # if non-infant
 
-        if age >= 18: #adults
+        if age >= 18: # adults
 
-            use_DBW = False
-
-            if is_given_DBW == 'Yes':
-                
-                DBW = given_DBW
-                use_DBW = True
-                
-            if is_given_DBW == 'No' and DBW_method != 'N/A': 
-
-                DBW_values = {'BMI-Based Formulation': ter.DBW_adults_BMI(height_cm),
-                       'Tannhauser\'s Method': ter.DBW_adults_Tannhauser(height_cm)}
-                
-                DBW = DBW_values[DBW_method]
-                use_DBW = True
-
-            if use_DBW:
-
-                TER_adults_Cooper, BMR_Cooper, PA_Cooper, BMR_factor_Cooper, PAL_factor_Cooper = ter.TER_adults_Cooper(DBW, PAL, sex)
-                TER_adults_Krause, PAL_factor_Krause = ter.TER_adults_Krause(DBW, PAL)
-                TER_adults_PAGAC, PAL_factor_PAGAC = ter.TER_adults_PAGAC(DBW, PAL)
-
-                if is_given_DBW == 'No':
-
-                    st.header('Calculation of DBW')
-
-                    if DBW_method == 'BMI-Based Formulation':
-                        
-                        st.write('Using BMI-Based Formulation')
-                        st.write(f'Normal BMI = 22 kg/m^2')
-                        st.write(f'DBW = 22 kg/m^2 x ({height_cm/100: .2f} m)^2 = {DBW: .2f} kg')
-
-                    else:
-
-                        st.subheader('Using Tannhauser\'s Formula')
-                        st.write(f'DBW = ({height_cm: .2f} - 100) - 0.1({height_cm: .2f}) = {DBW: .2f} kg')
-
-                st.divider()
-
-                st.header('Calculation of TER')
-
-                st.subheader('Using Cooper\'s method')
-                st.write(f'BMR = {BMR_factor_Cooper: .2f} kcal//kg/hr x {DBW: .2f} kg x 24 hrs = {BMR_Cooper: .2f} kcal')
-                st.write(f'PA = {BMR_Cooper: .2f} x {PAL_factor_Cooper: .2f} = {PA_Cooper: .2f} kcal')
-                st.write(f'TER = {BMR_Cooper: .2f} + {PA_Cooper: .2f} kcal = {TER_adults_Cooper: .2f} kcal')
-
-                st.subheader('Using Krause\'s method')
-                st.write(f'TER = {DBW: .2f} kg x {PAL_factor_Krause: .2f} kcal/kg = {TER_adults_Krause: .2f} kcal')
-
-                st.subheader('Using PAGAC method')
-                st.write(f'TER = {DBW: .2f} kg x {PAL_factor_PAGAC: .2f} kcal/kg = {TER_adults_PAGAC: .2f} kcal')
+            DBW_values = {'BMI-Based Formulation': ter.DBW_adults_BMI(height_cm),
+                    'Tannhauser\'s Method': ter.DBW_adults_Tannhauser(height_cm),
+                    'Input a value': given_DBW}
             
-            if not use_DBW:
-
-                st.write('Since no DBW was given, the Cooper, Krause, and PAGAC methods will not apply.')
-
+            DBW = DBW_values[DBW_method]
+            
+            # call ter functions
+            TER_adults_Cooper, BMR_Cooper, PA_Cooper, BMR_factor_Cooper, PAL_factor_Cooper = ter.TER_adults_Cooper(DBW, PAL, sex)
+            TER_adults_Krause, PAL_factor_Krause = ter.TER_adults_Krause(DBW, PAL)
+            TER_adults_PAGAC, PAL_factor_PAGAC = ter.TER_adults_PAGAC(DBW, PAL)
             TER_adults_MifflinStJeor, BMR_MifflinStJeor, PAL_factor_MifflinStJeor = ter.TER_adults_MifflinStJeor(age, weight, height_cm, sex, PAL)
             TER_adults_Oxford, BMR_Oxford, PAL_factor_Oxford, a, b = ter.TER_adults_Oxford(age, weight, sex, PAL)
             TER_adults_HarrisBenedict, BMR_HarrisBenedict, PAL_factor_HarrisBenedict = ter.TER_adults_HarrisBenedict(age, weight, height_cm, sex, PAL)
+
+            # sample computations
+            if DBW_method == 'BMI-Based Formulation' or DBW_method == 'Tannhauser\'s Method': 
+
+                st.header('Calculation of DBW')
+
+                if DBW_method == 'BMI-Based Formulation':
+                    
+                    st.write('Using BMI-Based Formulation')
+                    st.write(f'Normal BMI = 22 kg/m^2')
+                    st.write(f'DBW = 22 kg/m^2 x ({height_cm/100: .2f} m)^2 = {DBW: .2f} kg')
+
+                else:
+
+                    st.subheader('Using Tannhauser\'s Formula')
+                    st.write(f'DBW = ({height_cm: .2f} - 100) - 0.1({height_cm: .2f}) = {DBW: .2f} kg')
+
+            st.divider()
+
+            st.header('Calculation of TER')
+
+            st.subheader('Using Cooper\'s method')
+            st.write(f'BMR = {BMR_factor_Cooper: .2f} kcal//kg/hr x {DBW: .2f} kg x 24 hrs = {BMR_Cooper: .2f} kcal')
+            st.write(f'PA = {BMR_Cooper: .2f} x {PAL_factor_Cooper: .2f} = {PA_Cooper: .2f} kcal')
+            st.write(f'TER = {BMR_Cooper: .2f} + {PA_Cooper: .2f} kcal = {TER_adults_Cooper: .2f} kcal')
+
+            st.subheader('Using Krause\'s method')
+            st.write(f'TER = {DBW: .2f} kg x {PAL_factor_Krause: .2f} kcal/kg = {TER_adults_Krause: .2f} kcal')
+
+            st.subheader('Using PAGAC method')
+            st.write(f'TER = {DBW: .2f} kg x {PAL_factor_PAGAC: .2f} kcal/kg = {TER_adults_PAGAC: .2f} kcal')
+
 
             if sex == 'Male':
 
@@ -176,20 +159,14 @@ if st.button("Calculate TER"):
 
         elif age > 10: #adolescence
 
-            if is_given_DBW == 'No':
+            TER_children_adolescents_CBMRG, k_CBMRG = ter.TER_children_adolescents_CBMRG(age, given_DBW)
+            TER_children_adolescents_PDRI, k_PDRI = ter.TER_children_adolescents_PDRI(age, given_DBW, sex)
 
-                st.write('No given DBW. TER calculation for adoloscents requires DBW value.')
+            st.subheader('Using CBMRG formula')
+            st.write(f'TER = {given_DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
 
-            else: # if DBW is given
-
-                TER_children_adolescents_CBMRG, k_CBMRG = ter.TER_children_adolescents_CBMRG(age, given_DBW)
-                TER_children_adolescents_PDRI, k_PDRI = ter.TER_children_adolescents_PDRI(age, given_DBW, sex)
-
-                st.subheader('Using CBMRG formula')
-                st.write(f'TER = {given_DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
-
-                st.subheader('Using PDRI method')
-                st.write(f'TER = {given_DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
+            st.subheader('Using PDRI method')
+            st.write(f'TER = {given_DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
 
         else: # children 
 
