@@ -1,6 +1,25 @@
 import streamlit as st
 import TER_functions as ter
 
+if "outputs" not in st.session_state:
+    st.session_state.outputs = []
+
+# --- output wrapper functions ----
+def out_header(text):
+    st.session_state.outputs.append(("header", text))
+
+def out_subheader(text):
+    st.session_state.outputs.append(("subheader", text))
+
+def out_write(text):
+    st.session_state.outputs.append(("write", text))
+
+def out_divider():
+    st.session_state.outputs.append(("divider", None))
+
+def clear_results():
+    st.session_state.outputs = []
+
 st.title('TER Calculator')
 
 # --- user-inputs ---
@@ -40,14 +59,18 @@ else:
     PAL = st.selectbox('Physical Activity', ['Bed rest', 'Sedentary', 'Light', 'Moderate', 'Heavy', 'Very active/Vigorous'])
 
     st.write('Select method for DBW calculation.')
-    DBW_method = DBW_method = st.radio('Select DBW calculation method', ['BMI-Based Formulation', 'Tannhauser\'s Method', 'Input a value'])
+    DBW_method = st.selectbox('Select DBW calculation method', ['BMI-Based Formulation', 'Tannhauser\'s Method', 'Input a value'])
+    st.warning('BMI-Based Formulation and Tannhauser\'s Method only apply to adults.')
 
+    given_DBW = None
     if DBW_method == 'Input a value':
 
         given_DBW = st.number_input('DBW (kg)')
-        
+    
 # -- caluclation of ter --- 
 if st.button("Calculate TER"):
+
+    clear_results()
 
     if life_stage == 'Infant': # if infant
 
@@ -56,31 +79,34 @@ if st.button("Calculate TER"):
         TER_method1 = ter.TER_infant(age,DBW_method1)
         TER_method2 = ter.TER_infant(age,DBW_method2)
 
-        st.subheader('Method 1')
+        out_subheader('Method 1')
 
         if age <= 6:
 
-            st.write(f'DBW = {weight: .2f} grams + ({age} x 600) = {DBW_method1*1000: .2f} g = {DBW_method1: .2f} kg')
-            st.write(f'TER = {DBW_method1: .2f} kg x 95 kcal/kg = {TER_method1: .2f} kcal')
+            out_write(f'DBW = {weight: .2f} grams + ({age} x 600) = {DBW_method1*1000: .2f} g = {DBW_method1: .2f} kg')
+            out_write(f'TER = {DBW_method1: .2f} kg x 95 kcal/kg = {TER_method1: .2f} kcal')
         
         else:
 
-            st.write(f'DBW = {weight: .2f} grams + ({age} x 500) = {DBW_method1*1000: .2f} g = {DBW_method1: .2f} kg')
-            st.write(f'TER = {DBW_method1: .2f} kg x 80 kcal/kg = {TER_method1: .2f} kcal')
+            out_write(f'DBW = {weight: .2f} grams + ({age} x 500) = {DBW_method1*1000: .2f} g = {DBW_method1: .2f} kg')
+            out_write(f'TER = {DBW_method1: .2f} kg x 80 kcal/kg = {TER_method1: .2f} kcal')
 
-        st.subheader('Method 2')
+        TER_results = {'Method 1': TER_method1,
+                       'Method 2': TER_method2
+                       }
 
-        st.write(f'DBW = {age}/2 + 3 = {DBW_method2} kg')
+        out_subheader('Method 2')
+
+        out_write(f'DBW = {age}/2 + 3 = {DBW_method2} kg')
         
         if age <= 6:
 
-            st.write(f'TER = {DBW_method2: .2f} kg x 95 kcal/kg = {TER_method2} kcal')
+            out_write(f'TER = {DBW_method2: .2f} kg x 95 kcal/kg = {TER_method2} kcal')
 
         else:
 
-            st.write(f'TER = {DBW_method2: .2f} kg x 80 kcal/kg = {TER_method2} kcal')
-
-
+            out_write(f'TER = {DBW_method2: .2f} kg x 80 kcal/kg = {TER_method2} kcal')
+    
     else: # if non-infant
 
         if age >= 18: # adults
@@ -99,74 +125,86 @@ if st.button("Calculate TER"):
             TER_adults_Oxford, BMR_Oxford, PAL_factor_Oxford, a, b = ter.TER_adults_Oxford(age, weight, sex, PAL)
             TER_adults_HarrisBenedict, BMR_HarrisBenedict, PAL_factor_HarrisBenedict = ter.TER_adults_HarrisBenedict(age, weight, height_cm, sex, PAL)
 
+            TER_results = {
+                            "Cooper": TER_adults_Cooper,
+                            "Krause": TER_adults_Krause,
+                            "PAGAC": TER_adults_PAGAC,
+                            "Mifflin-St Jeor": TER_adults_MifflinStJeor,
+                            "Oxford": TER_adults_Oxford,
+                            "Harris-Benedict": TER_adults_HarrisBenedict
+                        }
+
             # sample computations
             if DBW_method == 'BMI-Based Formulation' or DBW_method == 'Tannhauser\'s Method': 
 
-                st.header('Calculation of DBW')
+                out_header('Calculation of DBW')
 
                 if DBW_method == 'BMI-Based Formulation':
                     
-                    st.write('Using BMI-Based Formulation')
-                    st.write(f'Normal BMI = 22 kg/m^2')
-                    st.write(f'DBW = 22 kg/m^2 x ({height_cm/100: .2f} m)^2 = {DBW: .2f} kg')
+                    out_write('Using BMI-Based Formulation')
+                    out_write(f'Normal BMI = 22 kg/m^2')
+                    out_write(f'DBW = 22 kg/m^2 x ({height_cm/100: .2f} m)^2 = {DBW: .2f} kg')
 
                 else:
 
-                    st.subheader('Using Tannhauser\'s Formula')
-                    st.write(f'DBW = ({height_cm: .2f} - 100) - 0.1({height_cm: .2f}) = {DBW: .2f} kg')
+                    out_subheader('Using Tannhauser\'s Formula')
+                    out_write(f'DBW = ({height_cm: .2f} - 100) - 0.1({height_cm: .2f}) = {DBW: .2f} kg')
 
-            st.divider()
+            out_divider()
 
-            st.header('Calculation of TER')
+            out_header('Calculation of TER')
 
-            st.subheader('Using Cooper\'s method')
-            st.write(f'BMR = {BMR_factor_Cooper: .2f} kcal//kg/hr x {DBW: .2f} kg x 24 hrs = {BMR_Cooper: .2f} kcal')
-            st.write(f'PA = {BMR_Cooper: .2f} x {PAL_factor_Cooper: .2f} = {PA_Cooper: .2f} kcal')
-            st.write(f'TER = {BMR_Cooper: .2f} + {PA_Cooper: .2f} kcal = {TER_adults_Cooper: .2f} kcal')
+            out_subheader('Using Cooper\'s method')
+            out_write(f'BMR = {BMR_factor_Cooper: .2f} kcal//kg/hr x {DBW: .2f} kg x 24 hrs = {BMR_Cooper: .2f} kcal')
+            out_write(f'PA = {BMR_Cooper: .2f} x {PAL_factor_Cooper: .2f} = {PA_Cooper: .2f} kcal')
+            out_write(f'TER = {BMR_Cooper: .2f} + {PA_Cooper: .2f} kcal = {TER_adults_Cooper: .2f} kcal')
 
-            st.subheader('Using Krause\'s method')
-            st.write(f'TER = {DBW: .2f} kg x {PAL_factor_Krause: .2f} kcal/kg = {TER_adults_Krause: .2f} kcal')
+            out_subheader('Using Krause\'s method')
+            out_write(f'TER = {DBW: .2f} kg x {PAL_factor_Krause: .2f} kcal/kg = {TER_adults_Krause: .2f} kcal')
 
-            st.subheader('Using PAGAC method')
-            st.write(f'TER = {DBW: .2f} kg x {PAL_factor_PAGAC: .2f} kcal/kg = {TER_adults_PAGAC: .2f} kcal')
-
+            out_subheader('Using PAGAC method')
+            out_write(f'TER = {DBW: .2f} kg x {PAL_factor_PAGAC: .2f} kcal/kg = {TER_adults_PAGAC: .2f} kcal')
 
             if sex == 'Male':
 
-                st.subheader('Using Mifflin-St Jeor Equation')
-                st.write(f'BMR = (9.99 x {weight: .2f} kg) + (6.25 x {height_cm: .2f} cm) - (4.92 x {age}) + 5 = {BMR_MifflinStJeor: .2f} kcal')
-                st.write(f'TER = {BMR_MifflinStJeor: .2f} kcal x {PAL_factor_MifflinStJeor: .2f} = {TER_adults_MifflinStJeor: .2f} kcal')
+                out_subheader('Using Mifflin-St Jeor Equation')
+                out_write(f'BMR = (9.99 x {weight: .2f} kg) + (6.25 x {height_cm: .2f} cm) - (4.92 x {age}) + 5 = {BMR_MifflinStJeor: .2f} kcal')
+                out_write(f'TER = {BMR_MifflinStJeor: .2f} kcal x {PAL_factor_MifflinStJeor: .2f} = {TER_adults_MifflinStJeor: .2f} kcal')
 
                 
-                st.subheader('Using Harris-Benedict Equation')
-                st.write(f'BMR = 66.47 + 13.75({weight: .2f} kg) + 5.0({height_cm: .2f} cm) - 6.75{age} = {BMR_HarrisBenedict: .2f} kcal')
-                st.write(f'TER = {BMR_HarrisBenedict: .2f} kcal x {PAL_factor_HarrisBenedict} = {TER_adults_HarrisBenedict: .2f} kcal') 
+                out_subheader('Using Harris-Benedict Equation')
+                out_write(f'BMR = 66.47 + 13.75({weight: .2f} kg) + 5.0({height_cm: .2f} cm) - 6.75{age} = {BMR_HarrisBenedict: .2f} kcal')
+                out_write(f'TER = {BMR_HarrisBenedict: .2f} kcal x {PAL_factor_HarrisBenedict} = {TER_adults_HarrisBenedict: .2f} kcal') 
 
             else: # if female
                 
-                st.header('Using Mifflin-St Jeor Equation')
-                st.write(f'BMR = (9.99 x {weight: .2f} kg) + (6.25 x {height_cm: .2f} cm) - (4.92 x {age}) - 161 = {BMR_MifflinStJeor: .2f} kcal')
-                st.write(f'TER = {BMR_MifflinStJeor: .2f} kcal x {PAL_factor_MifflinStJeor: .2f} = {TER_adults_MifflinStJeor: .2f} kcal')
+                out_header('Using Mifflin-St Jeor Equation')
+                out_write(f'BMR = (9.99 x {weight: .2f} kg) + (6.25 x {height_cm: .2f} cm) - (4.92 x {age}) - 161 = {BMR_MifflinStJeor: .2f} kcal')
+                out_write(f'TER = {BMR_MifflinStJeor: .2f} kcal x {PAL_factor_MifflinStJeor: .2f} = {TER_adults_MifflinStJeor: .2f} kcal')
                 
-                st.subheader('Using Harris-Benedict Equation')
-                st.write(f'BMR = 655.1 + 9.56({weight: .2f} kg) + 1.85({height_cm: .2f} cm) - 4.67 x {age} = {BMR_HarrisBenedict: .2f} kcal')
-                st.write(f'TER = {BMR_HarrisBenedict: .2f} kcal x {PAL_factor_HarrisBenedict} = {TER_adults_HarrisBenedict: .2f} kcal') 
+                out_subheader('Using Harris-Benedict Equation')
+                out_write(f'BMR = 655.1 + 9.56({weight: .2f} kg) + 1.85({height_cm: .2f} cm) - 4.67 x {age} = {BMR_HarrisBenedict: .2f} kcal')
+                out_write(f'TER = {BMR_HarrisBenedict: .2f} kcal x {PAL_factor_HarrisBenedict} = {TER_adults_HarrisBenedict: .2f} kcal') 
 
 
-            st.subheader('Using Oxford Equations')
-            st.write(f'BMR = ({a: .2f} x {weight: .2f} kg) + {b} = {BMR_Oxford: .2f} kcal')
-            st.write(f'TER = {BMR_Oxford: .2f} kcal x {PAL_factor_Oxford: .2f} = {TER_adults_Oxford: .2f} kcal')
+            out_subheader('Using Oxford Equations')
+            out_write(f'BMR = ({a: .2f} x {weight: .2f} kg) + {b} = {BMR_Oxford: .2f} kcal')
+            out_write(f'TER = {BMR_Oxford: .2f} kcal x {PAL_factor_Oxford: .2f} = {TER_adults_Oxford: .2f} kcal')
 
         elif age > 10: #adolescence
 
             TER_children_adolescents_CBMRG, k_CBMRG = ter.TER_children_adolescents_CBMRG(age, given_DBW)
             TER_children_adolescents_PDRI, k_PDRI = ter.TER_children_adolescents_PDRI(age, given_DBW, sex)
 
-            st.subheader('Using CBMRG formula')
-            st.write(f'TER = {given_DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
+            TER_results = {'CBMRG': TER_children_adolescents_CBMRG,
+                           'PDRI': TER_children_adolescents_PDRI
+                        }
+            
+            out_subheader('Using CBMRG formula')
+            out_write(f'TER = {given_DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
 
-            st.subheader('Using PDRI method')
-            st.write(f'TER = {given_DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
+            out_subheader('Using PDRI method')
+            out_write(f'TER = {given_DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
 
         else: # children 
 
@@ -176,18 +214,38 @@ if st.button("Calculate TER"):
             TER_children_adolescents_CBMRG, k_CBMRG = ter.TER_children_adolescents_CBMRG(age, DBW)
             TER_children_adolescents_PDRI, k_PDRI = ter.TER_children_adolescents_PDRI(age, DBW, sex)
 
-            st.header('Calculation of DBW')
-            st.write(f'DBW = {age} x 2 + 8 = {DBW: .2f} kg')
+            TER_results = {'Narins and Weil': TER_children_NarinsWeil,
+                           'CBMRG': TER_children_adolescents_CBMRG,
+                           'PDRI': TER_children_adolescents_PDRI
+                          }
+    
+            out_header('Calculation of DBW')
+            out_write(f'DBW = {age} x 2 + 8 = {DBW: .2f} kg')
 
-            st.divider()
+            out_divider()
 
-            st.header('Calculation of TER')
+            out_header('Calculation of TER')
 
-            st.subheader('Using Narins and Weil formula')
-            st.write(f'TER = 1000 + 100 x {age} = {TER_children_NarinsWeil: .2f} kcal.')
+            out_subheader('Using Narins and Weil formula')
+            out_write(f'TER = 1000 + 100 x {age} = {TER_children_NarinsWeil: .2f} kcal.')
 
-            st.subheader('Using CBMRG formula')
-            st.write(f'TER = {DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
+            out_subheader('Using CBMRG formula')
+            out_write(f'TER = {DBW: .2f} x {k_CBMRG: .2f} kcal/kg = {TER_children_adolescents_CBMRG: .2f} kcal')
 
-            st.subheader('Using PDRI method')
-            st.write(f'TER = {DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
+            out_subheader('Using PDRI method')
+            out_write(f'TER = {DBW: .2f} x {k_PDRI: .2f} kcal/kg = {TER_children_adolescents_PDRI: .2f} kcal')
+    
+# --- render all outputs --- 
+
+st.divider()
+st.header("Computed Results")
+
+for kind, content in st.session_state.outputs:
+    if kind == "header":
+        st.header(content)
+    elif kind == "subheader":
+        st.subheader(content)
+    elif kind == "write":
+        st.write(content)
+    elif kind == "divider":
+        st.divider()

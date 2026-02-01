@@ -297,7 +297,8 @@ def TER_adults_Krause(DBW, PAL):
     return DBW * PAL_factor.get(PAL, 30), PAL_factor.get(PAL)
 
 def TER_adults_PAGAC(DBW, PAL):
-    PAL_factor = {"Sedentary": 30,
+    PAL_factor = {"Bed rest": 30,
+        "Sedentary": 30,
         "Light": 35,
         "Moderate": 40,
         "Heavy": 42.5, # assumed 
@@ -307,14 +308,16 @@ def TER_adults_PAGAC(DBW, PAL):
 
 
 # PAL factors for the following methods
-PAL_factors_male = {"Sedentary": 1.3,
+PAL_factors_male = {"Bed rest": 1.3,
+                        "Sedentary": 1.3,
                         "Light": 1.58,
                         "Moderate": 1.67,
                         "Heavy": 1.88,
                         "Very active/Vigorous": 1.88 # assumed
 }
 
-PAL_factors_female = {"Sedentary": 1.3,
+PAL_factors_female = {"Bed rest": 1.3,
+                        "Sedentary": 1.3,
                         "Light": 1.45,
                         "Moderate": 1.55,
                         "Heavy": 1.75, 
@@ -367,5 +370,37 @@ def TER_adults_Oxford(age, weight, sex, PAL):
     TER = BMR * PAL_factor
     return TER, BMR, PAL_factor, a, b
 
+def get_cpf_ranges_AMDR(age, life_stage):
+    if life_stage == "Infant":
+        if age < 5:
+            return {
+                "Carbs": (35,55),
+                "Protein": (40,60),
+                "Fat": (35,55)
+            }
+        else:
+            return {
+                "Carbs": (45, 62),
+                "Protein": (8, 15),
+                "Fat": (30, 40) 
+            }
+    elif age >= 18:
+        return {
+            "Carbs": (55, 75),
+            "Protein": (10, 15),
+            "Fat": (15, 30)
+        }
+    elif age >= 3:
+        return {
+            "Carbs": (55, 79),
+            "Protein": (6, 15),
+            "Fat": (15, 30)
+        }
+    else:
+        return {
+            "Carbs": (50, 69),
+            "Protein": (6, 15),
+            "Fat": (25, 35)
+        }
 
 
